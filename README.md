@@ -1,6 +1,12 @@
 # mount-ios-backup
 A tool to mount iOS backups as a FUSE filesystem
 
+## Dependencies
+(I haven't tried to create a requirements file yet)
+- `pyfuse`
+- `biplist`
+- `sqlite3`
+
 ## General information
 - Tested on a backup from a device running iOS 16, created by `libimobiledevice`. I don't think backup formats have changed in several iOS versions, and `libimobiledevice` backups should be identical to iTunes backups, so it should work on those as well, but I haven't tested it.
 - The mounted backup will be read-only. I don't forsee this changing because I don't want to deal with writing backup files when reading them is complex enough. Plus, a bug in a function that does writes is MUCH more likely to cause damage than a function that only does reads.
