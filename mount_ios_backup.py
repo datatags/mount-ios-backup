@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 
 import os
-import re
 import sys
 import errno
 import biplist
 import sqlite3
-from iphone_backup_decrypt import EncryptedBackup
 from fuse import FUSE, FuseOSError, Operations, fuse_get_context
 
 def debug(message):
