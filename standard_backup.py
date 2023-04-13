@@ -214,6 +214,12 @@ class BackupFS(Operations):
     def read(self, path, length, offset, fh):
         os.lseek(fh, offset, os.SEEK_SET)
         return os.read(fh, length)
+    
+    def readlink(self, path):
+        file_info = self._get_file_info(path)
+        if "Target" not in file_info.properties:
+            raise FuseOSError(os.EINVAL)
+        return file_info.plist['$objects'][file_info.properties["Target"].integer]
 
     def release(self, path, fh):
         return os.close(fh)
