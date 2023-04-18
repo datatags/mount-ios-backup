@@ -1,6 +1,6 @@
-from standard_backup import BackupFS
-import google_iphone_dataprotection
-from file_info import FileInfo
+from . import google_iphone_dataprotection
+from .standard_backup import BackupFS
+from .file_info import FileInfo
 import tempfile
 import biplist
 import struct

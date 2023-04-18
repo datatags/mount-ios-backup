@@ -2,7 +2,7 @@ import os
 import errno
 import biplist
 import sqlite3
-from file_info import FileInfo
+from .file_info import FileInfo
 from fuse import FuseOSError, Operations
 
 def debug(message):

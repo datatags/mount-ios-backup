@@ -41,4 +41,4 @@ A tool to mount iOS backups as a FUSE filesystem
 - ~~Support encrypted backups with https://github.com/jsharkey13/iphone_backup_decrypt~~
 - Return something more useful from `statfs`
   - Currently returns stats of filesystem at mount point
-- Figure out how to make it installable?
+- ~~Figure out how to make it installable?~~

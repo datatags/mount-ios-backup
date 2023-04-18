@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mount-ios-backup"
+version = "0.0.1"
+authors = [
+  { name="datatags", email="datatags@users.noreply.github.com" },
+]
+description = "A tool to mount iOS backups as a FUSE filesystem"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/datatags/mount-ios-backup"
+"Bug Tracker" = "https://github.com/datatags/mount-ios-backup/issues"
+
+[project.scripts]
+mount_ios_backup = 'mount_ios_backup.mount_ios_backup:main'
