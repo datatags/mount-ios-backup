@@ -9,7 +9,10 @@ from fuse import FUSE
 from standard_backup import BackupFS
 from encrypted_backup import EncryptedBackupFS
 
-def main(mountpoint, root, password=None, foreground=False):
+def main(rel_mountpoint, rel_root, password=None, foreground=False):
+    mountpoint = os.path.abspath(rel_mountpoint)
+    root = os.path.abspath(rel_root)
+
     plist = biplist.readPlist(os.path.join(root, "Manifest.plist"))
     if plist["IsEncrypted"]:
         print("This is an encrypted backup.")
@@ -22,7 +25,7 @@ def main(mountpoint, root, password=None, foreground=False):
     if foreground:
         print("Staying in foreground, press Ctrl-C to unmount")
     else:
-        print(f"Switching to background, use 'fusermount -u {os.path.abspath(root)}' to unmount")
+        print(f"Switching to background, use 'fusermount -u {mountpoint}' to unmount")
     FUSE(fs, mountpoint, nothreads=True, foreground=foreground)
 
 class PrintUsageParser(argparse.ArgumentParser):

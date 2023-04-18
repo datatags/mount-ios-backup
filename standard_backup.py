@@ -14,7 +14,7 @@ class BackupFS(Operations):
     # Except for O_DIRECTORY
     BAD_FILE_FLAGS = os.O_WRONLY | os.O_RDWR | os.O_CLOEXEC | os.O_CREAT | os.O_EXCL | os.O_NOCTTY | os.O_NOFOLLOW | os.O_TMPFILE | os.O_TRUNC
     def __init__(self, root):
-        self.root = root
+        self.root = os.path.abspath(root)
         self._db_connection = None
         self._domain_tree = {}
         self._generate_domain_tree()
