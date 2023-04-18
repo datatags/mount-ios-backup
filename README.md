@@ -2,10 +2,9 @@
 A tool to mount iOS backups as a FUSE filesystem
 
 ## Dependencies
-(I haven't tried to create a requirements file yet)
 - `pyfuse`
 - `biplist`
-- `sqlite3`
+- `sqlite3` (built-in)
 - `fastpbkdf2`
 - `pycryptodome`
 
@@ -31,10 +30,10 @@ A tool to mount iOS backups as a FUSE filesystem
   - Smaller block sizes may hurt transfer speed more, as each read call needs to read data before and sometimes after the requested area.
 
 ## Todo
-- Handle symlinks in some fashion, since they apparently appear in some places
+- ~~Handle symlinks in some fashion, since they apparently appear in some places~~
 - Avoid hitting the database for every call to `getattr` to improve performance?
 - Add command-line options, including:
-  - `foreground`
+  - ~~`foreground`~~
   - `allow_other`
   - Disable RAM-caching manifest
   - Standard mounting options?
