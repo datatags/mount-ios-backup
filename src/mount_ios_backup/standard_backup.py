@@ -127,7 +127,7 @@ class BackupFS(Operations):
         if info.virtual:
             st = os.lstat(self.root)
             stats = dict((key, getattr(st, key)) for key in ('st_atime', 'st_ctime',
-                     'st_gid', 'st_mode', 'st_mtime', 'st_nlink', 'st_size', 'st_uid'))
+                     'st_gid', 'st_mode', 'st_mtime', 'st_nlink', 'st_uid'))
             stats["st_size"] = 0
             return stats
         attrs = info.properties
@@ -162,7 +162,7 @@ class BackupFS(Operations):
                 for domain in self._domain_tree.keys():
                     yield domain
                 return
-            # Selects all existing domains that start with whatever is in `file_info.domain`
+            # Selects all existing domains that start with whatever is in `file_info.domain` plus a dash
             cursor.execute("SELECT DISTINCT `domain` FROM `Files` WHERE `domain` LIKE ? || '-%'", (file_info.domain,))
             for row in cursor:
                 # Chop domain prefix
@@ -196,7 +196,7 @@ class BackupFS(Operations):
     # default implementation like most other functions,
     # so we do it here.
     def utimens(self, path, times=None):
-        raise FuseOSError(os.EROFS)
+        raise FuseOSError(errno.EROFS)
 
     # File methods
     # ============
@@ -204,7 +204,7 @@ class BackupFS(Operations):
     def open(self, path, flags):
         # If any flags that cause writing are present, throw an error
         if flags & self.BAD_FILE_FLAGS != 0:
-            raise FuseOSError(os.EROFS)
+            raise FuseOSError(errno.EROFS)
         file_info = self._get_file_info(path)
         if file_info.is_directory():
             # Default implementation is just return 0, so I guess that's fine?
@@ -218,7 +218,7 @@ class BackupFS(Operations):
     def readlink(self, path):
         file_info = self._get_file_info(path)
         if "Target" not in file_info.properties:
-            raise FuseOSError(os.EINVAL)
+            raise FuseOSError(errno.EINVAL)
         return file_info.plist['$objects'][file_info.properties["Target"].integer]
 
     def release(self, path, fh):

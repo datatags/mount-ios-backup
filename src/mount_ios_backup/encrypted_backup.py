@@ -46,11 +46,13 @@ class EncryptedBackupFS(BackupFS):
         print("Decrypting manifest...")
         with open(os.path.join(self.root, "Manifest.db"), 'rb') as encrypted_db_filehandle, open(self._temp_db, 'wb') as decrypted_db_filehandle:
             while True:
+                # Read in arbitrary block sizes
                 encrypted_data = encrypted_db_filehandle.read(65536)
                 if not encrypted_data:
                     break
                 decrypted_data = google_iphone_dataprotection.AESdecryptCBC(encrypted_data, key, iv=iv)
                 decrypted_db_filehandle.write(decrypted_data)
+                # Last block of ciphertext = next block IV
                 iv = encrypted_data[-16:]
     
     def _decrypt(self, file_info, iv, data):
@@ -71,6 +73,7 @@ class EncryptedBackupFS(BackupFS):
             # Default implementation is just return 0, so I guess that's fine?
             return self.opendir(path)
         fh = os.open(file_info.get_path(), flags)
+        # Caching the file info avoids hitting the database for each read call
         self._open_files_info[fh] = file_info
         return fh
 
@@ -79,6 +82,23 @@ class EncryptedBackupFS(BackupFS):
         # If file is not encrypted, handle it like a normal file
         if not "EncryptionKey" in file_info.properties:
             return super().read(path, req_length, req_offset, fh)
+
+        # This next section looks really confusing and I'm not really sure how to make it better.
+        #
+        # Basically, the rest of this function works around the fact that we can't just read
+        # a single byte in the file, even if that's all that the caller requested, because
+        # we have to decrypt it first, and AES is a block cipher.
+        #
+        # So what ends up happening is we need to find the start and end positions of the
+        # block(s) the caller requested, then back up one block from the first of those to
+        # find the IV for decryption. (Use zeroes if we're already at the beginning of the file.)
+        #
+        # We can then pass this information off to the decryption function and get the result.
+        #
+        # If we read to the end of the file, some AES padding needs to be trimmed, so we do that next.
+        #
+        # Finally, we need to trim the decrypted data back down to what the caller actually requested,
+        # in case the caller requested partial block(s).
 
         # Requested end byte
         req_end = req_offset + req_length
