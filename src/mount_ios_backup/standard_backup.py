@@ -10,9 +10,8 @@ def debug(message):
         print(message)
 
 class BackupFS(Operations):
-    # Source: "file creation flags" in https://man7.org/linux/man-pages/man2/open.2.html#DESCRIPTION
-    # Except for O_DIRECTORY
-    BAD_FILE_FLAGS = os.O_WRONLY | os.O_RDWR | os.O_CLOEXEC | os.O_CREAT | os.O_EXCL | os.O_NOCTTY | os.O_NOFOLLOW | os.O_TMPFILE | os.O_TRUNC
+    # Based on the "file creation flags" in https://man7.org/linux/man-pages/man2/open.2.html#DESCRIPTION
+    BAD_FILE_FLAGS = os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_TMPFILE | os.O_TRUNC
     def __init__(self, root):
         self.root = os.path.abspath(root)
         self._db_connection = None
@@ -74,6 +73,7 @@ class BackupFS(Operations):
             raise FuseOSError(errno.ENOENT)
         return FileInfo(self.root, row[0], domain_path, relative_path, biplist.readPlistFromString(row[1]), row[2])
     
+    # Do not assume this file exists or has a value except while calling _create_db_connection
     def _get_db_file(self):
         return os.path.join(self.root, "Manifest.db")
     

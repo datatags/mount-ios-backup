@@ -1,9 +1,10 @@
 from . import google_iphone_dataprotection
 from .standard_backup import BackupFS
-from .file_info import FileInfo
+from fuse import FuseOSError
 import tempfile
 import biplist
 import struct
+import errno
 import math
 import os
 
@@ -13,16 +14,19 @@ AES_BLOCK_SIZE = 16
 class EncryptedBackupFS(BackupFS):
     def __init__(self, root, raw_password):
         self._password = raw_password if type(raw_password) is bytes else raw_password.encode("utf-8")
-        self._temp_dir = tempfile.mkdtemp()
-        self._temp_db  = os.path.join(self._temp_dir, "Manifest.db")
         self._open_files_info = {}
         super().__init__(root)
-        # Delete database once we've loaded it into RAM
-        os.remove(self._temp_db)
 
     def _get_db_file(self):
-        self._decrypt_manifest_db_file()
         return self._temp_db
+
+    def _create_db_connection(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            self._temp_db = os.path.join(tempdir, "Manifest.db")
+            self._decrypt_manifest_db_file()
+            result = super()._create_db_connection()
+            self._temp_db = None
+            return result
 
     # Modified from iphone_backup.py
     # Returns ManifestKey from Manifest.plist
@@ -67,7 +71,7 @@ class EncryptedBackupFS(BackupFS):
     def open(self, path, flags):
         # If any flags that cause writing are present, throw an error
         if flags & self.BAD_FILE_FLAGS != 0:
-            raise FuseOSError(os.EROFS)
+            raise FuseOSError(errno.EROFS)
         file_info = self._get_file_info(path)
         if file_info.is_directory():
             # Default implementation is just return 0, so I guess that's fine?
@@ -118,7 +122,11 @@ class EncryptedBackupFS(BackupFS):
         else:
             os.lseek(fh, prev_block_boundary, os.SEEK_SET)
             iv = os.read(fh, AES_BLOCK_SIZE)
-        decrypted = self._decrypt(file_info, iv, os.read(fh, req_end_block_boundary - req_block_boundary))
+            # If a program is attempting to read past the end of a file, this may occur.
+            if len(iv) == 0:
+                return b""
+        data = os.read(fh, req_end_block_boundary - req_block_boundary)
+        decrypted = self._decrypt(file_info, iv, data)
         # If we're reading the last byte in the file
         if req_end_block_boundary - 1 >= file_info.get_size():
             decrypted = google_iphone_dataprotection.removePadding(decrypted)
