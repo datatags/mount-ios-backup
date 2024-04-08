@@ -22,11 +22,13 @@ def main():
     arg_parser.add_argument("mountpoint", help="the folder to mount the backup in")
     arg_parser.add_argument("-p", "--password", help="the backup password, if encrypted")
     arg_parser.add_argument("-f", "--foreground", action="store_true", help="keep the process in the foreground")
+    arg_parser.add_argument("--list-size-anomalies", action="store_true", help="find files whose sizes do not match the size in the manifest")
     args = arg_parser.parse_args()
     root = os.path.abspath(args.backup)
     mountpoint = os.path.abspath(args.mountpoint)
     password = args.password
     foreground = args.foreground
+    anomalies = args.list_size_anomalies
     if password is None and "BACKUP_PASSWORD" in os.environ:
         password = os.environ["BACKUP_PASSWORD"]
 
@@ -39,6 +41,9 @@ def main():
     else:
         print("This is an unencrypted backup.")
         fs = BackupFS(root)
+    if anomalies:
+        fs.list_size_anomalies()
+        return
     if foreground:
         print("Staying in foreground, press Ctrl-C to unmount")
     else:

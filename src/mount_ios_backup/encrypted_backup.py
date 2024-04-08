@@ -28,6 +28,11 @@ class EncryptedBackupFS(BackupFS):
             self._temp_db = None
             return result
 
+    def _expected_source_size(self, file_size):
+        # Encrypted files are padded out to the AES block size, but files whose sizes are already
+        # divisible by the block size already are padded out another block.
+        return math.ceil((file_size + 1) / AES_BLOCK_SIZE) * AES_BLOCK_SIZE
+
     # Modified from iphone_backup.py
     # Returns ManifestKey from Manifest.plist
     def _read_and_unlock_keybag(self):

@@ -1,4 +1,5 @@
 import os
+import math
 import errno
 import biplist
 import sqlite3
@@ -91,7 +92,27 @@ class BackupFS(Operations):
                 self._domain_tree[parts[0]][parts[1]] = 1
             else:
                 self._domain_tree[parts[0]] = { parts[1]: 1 }
+
+    # For the size of a source file, return the expected size of a file on disk. (e.g. with encryption padding)
+    def _expected_source_size(self, file_size):
+        return file_size
     
+    def list_size_anomalies(self):
+        cur = self._get_db_connection().cursor()
+        cur.execute("SELECT `fileID`,`relativePath`,`file` FROM `Files`")
+        for row in cur:
+            raw_plist = biplist.readPlistFromString(row[2])
+            info = raw_plist["$objects"][raw_plist["$top"]["root"].integer]
+            size = info["Size"]
+            real_path = os.path.join(self.root, row[0][:2], row[0])
+            if not os.path.exists(real_path):
+                if size > 0:
+                    print(f"File {row[1]}({real_path}) of size {size} does not exist!")
+                continue
+            st = os.lstat(real_path)
+            if st.st_size != self._expected_source_size(size):
+                print(f"File {row[1]}({real_path}) has size {st.st_size}, but manifest says {size}")
+
     # Borrowed from _open_temp_database from iphone_backup.py
     def _create_db_connection(self):
         db = self._get_db_file()
